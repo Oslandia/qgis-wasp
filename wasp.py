@@ -41,6 +41,7 @@ class WAsP:
 
         self.actions = []
         self.ogr2ogr = QSettings().value('PythonPlugins/wasp/ogr2ogr')
+        
 
     def initGui(self):
         self.actions.append( QAction(
@@ -71,45 +72,80 @@ class WAsP:
             self.iface.removeToolBarIcon(a)
 
     def configure(self):
-        print 'configure'
-        self.ogr2ogr = QFileDialog.getOpenFileName(None, "Executable ogr2ogr a utiliser", self.ogr2ogr, "Executable (*.exe)");
+        self.ogr2ogr = os.path.abspath(QFileDialog.getOpenFileName(None, "Executable ogr2ogr a utiliser", self.ogr2ogr, "Executable (*.exe)"));
         QSettings().setValue('PythonPlugins/wasp/ogr2ogr', self.ogr2ogr)
 
     def impor(self):
-        print 'import'
-        mapFile = QFileDialog.getOpenFileName(None, "Select File", "", "WAsP File (*.map)");
+        if not self.ogr2ogr : self.configure()
+        mapFile = os.path.abspath(QFileDialog.getOpenFileName(None, "Select File", "", "WAsP File (*.map)"));
         if not mapFile: return
-        shpDir = tempfile.gettempdir()+'/'+os.path.basename(mapFile) #TODO strip dir name
-        cmd = [self.ogr2ogr,'-skipfailures','-overwrite','-f','"ESRI Shapefile"',shpDir,mapFile]
-        if not os.path.isdir(shpDir):
-            try: os.makedirs(shpDir)
-            except: QMessageBox.warning(self.iface.mainWindow(), "Warning", u"Impossible de créer le répertoire "+shpDir)
-        else:
+        shpDir = os.path.abspath(tempfile.gettempdir()+'\\'+os.path.basename(mapFile).replace('.map','.shp'))
+        cmd = [self.ogr2ogr,'-skipfailures','-overwrite','-f',"ESRI Shapefile",shpDir,mapFile]
+        if os.path.exists(shpDir):
             cmd.insert(1,'-overwrite')
 
         if self.__execCmd(cmd): 
             self.iface.addVectorLayer(shpDir, mapFile, "ogr")
 
     def expor(self):
-        print 'export'
-        mapFile = QFileDialog.getSaveFileName(None, "Save layer as", "", "WAsP File (*.map)");
-        shpFile =  self.iface.activeLayer().source()
-        cmd = [self.ogr2ogr,'-skipfailures','-f','"WAsP"',mapFile,shpFile]
+        if not self.ogr2ogr : self.configure()
+        if not self.iface.activeLayer(): QMessageBox.warning(self.iface.mainWindow(), "Attention", u'Aucune couche selectionnées')
+       
+        d = QDialog()
+        d.setWindowTitle('Option du pilote WAsP')
+        layout = QVBoxLayout(d)
+        buttonBox = QDialogButtonBox(d)
+        buttonBox.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        buttonBox.accepted.connect(d.accept)
+        buttonBox.rejected.connect(d.reject)
+        firstField = QComboBox( d )
+        secondField = QComboBox( d )
+        firstField.addItem( '[first field]' )
+        secondField.addItem( '[second field]' )
+        
+        for f in self.iface.activeLayer().pendingFields(): 
+            firstField.addItem( f.name() )
+            secondField.addItem( f.name() )
+        
+        lineEdit = QLineEdit( d )
+        lineEdit.setText('[tolerance]')
+        
+        layout.addWidget( firstField )
+        layout.addWidget( secondField )
+        layout.addWidget( lineEdit )
+        layout.addWidget( buttonBox )
+        if not d.exec_() : return
+ 
+        mapFile = os.path.abspath(QFileDialog.getSaveFileName(None, "Save layer as", "", "WAsP File (*.map)"));
+        shpFile = os.path.abspath(self.iface.activeLayer().source())
+        cmd = [self.ogr2ogr,'-skipfailures','-f','WAsP']
+        fields = ''
+        if firstField.currentText() != '[first field]': fields += firstField.currentText()
+        if secondField.currentText() != '[second field]': fields += ','+firstField.currentText()
+        if fields: cmd += ['-lco','WASP_FIELDS='+fields]
+        if lineEdit.text() != '[tolerance]': cmd += ['-lco','WASP_TOLERANCE='+lineEdit.text()]
+        
+        cmd += [mapFile,shpFile]
         self.__execCmd(cmd)
 
     def __execCmd(self, cmd ):
         success = True
+        errFile = tempfile.gettempdir()+'\wasp.log'
+        # because of a bug in subprocess, we must set all streams, even if we are only interested in stderr
+        err = open(tempfile.gettempdir()+'\wasp.out','w')
+        inp = open(tempfile.gettempdir()+'\wasp.inp','w')
+        inp.write('')
+        inp.close()
+        inp = open(inp.name,'r')
         print ' '.join(cmd)
-        errFile = tempfile.gettempdir()+'/wasp.log'
-        out = open(errFile,'w')
-        try: 
-            subprocess.check_call( cmd, stderr=out, shell=True)
-        except subprocess.CalledProcessError as e: 
-            QMessageBox.critical(self.iface.mainWindow(), "Erreur", ' '.join(cmd)+'\nerreur:\n voir '+errFile+' pour plus de detail ou ouvrir la Console Python et recomencer')
+        subprocess.call( cmd, stdout=err, stdin=inp, stderr=err, env={'PATH': str(os.path.dirname(cmd[0]))} )            
+        err.close()
+        err = open(err.name)
+        for l in err:
+            l.strip()
+            print l
             success = False
-            out.close()
-            out = open(errFile)
-            for l in out: print l
+        if not success: QMessageBox.critical(self.iface.mainWindow(), "Erreur", ' '.join(cmd)+'\nerreur:\n voir '+err.name+' pour plus de detail ou ouvrir la Console Python et recomencer')
         return success
 
 
