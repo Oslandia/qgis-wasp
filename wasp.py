@@ -29,7 +29,14 @@ import os.path
 import tempfile
 import subprocess
 
+try:
+    from osgeo import gdal, ogr
+except ImportError:
+    import gdal
+    import ogr
+
 qset = QSettings( "oslandia", "wasp_qgis_plugin" )
+
 
 class WAsP:
 
@@ -42,6 +49,10 @@ class WAsP:
         self.actions = []
         self.ogr2ogr = QSettings().value('PythonPlugins/wasp/ogr2ogr')
         
+        self.osge4w_dir = ''
+        if 'OSGEO4W_ROOT' in os.environ:
+            self.osge4w_dir = os.path.abspath( os.environ['OSGEO4W_ROOT'] )
+
 
     def initGui(self):
         self.actions.append( QAction(
@@ -190,14 +201,37 @@ class WAsP:
         out_low_res_dem = os.path.join( os.path.abspath(tempfile.gettempdir()), basename+'_low_res.tiff')
 
         out_res = str(int(4096/simplification_factor))
-        if not self.__execCmd( ['gdal_rasterize', '-a_nodata', '0', '-ts', '4096', '4096', '-a', field_name, '-l', basename, input_file, out_high_res_dem] ): return
-        if not self.__execCmd( ['gdal_fillnodata.py', out_high_res_dem, out_high_res_dem ] ): return
-        if not self.__execCmd( ['gdalwarp', '-ts', out_res, out_res, '-overwrite', out_high_res_dem, out_low_res_dem ] ) : return
+        exe = os.path.join(self.osge4w_dir, 'bin', 'gdal_rasterize') if self.osge4w_dir else 'gdal_rasterize'
+        if not self.__execCmd( [exe, 
+            '-a_nodata', '0', '-ts', '4096', '4096', '-a', field_name, 
+            '-l', basename, input_file, out_high_res_dem] ): return
+
+        #if not self.__execCmd( ['gdal_fillnodata.py', out_high_res_dem, out_high_res_dem ] ): return
+        # equiavlent to commented command above, appently calling a python script
+        # in a plugin is not the best idea (path problems)
+        src_ds = gdal.Open( out_high_res_dem, gdal.GA_Update )
+        srcband = src_ds.GetRasterBand(1)
+        maskband =  None
+        dstband = srcband
+        result = gdal.FillNodata( dstband, maskband,
+                          maxSearchDist=100, smoothingIterations=0, 
+                          options=[], callback = None )
+        src_ds = None
+        dst_ds = None
+        mask_ds = None
+
+        exe = os.path.join(self.osge4w_dir, 'bin', 'gdalwarp') if self.osge4w_dir else 'gdalwarp'
+        if not self.__execCmd( [exe, 
+            '-ts', out_res, out_res, '-overwrite', 
+            out_high_res_dem, out_low_res_dem ] ) : return
 
         if os.path.exists(output_file):
             os.remove(output_file)
             
-        if not self.__execCmd( ['gdal_contour', '-a', field_name, '-i', heigh_resolution, '-f', 'ESRI Shapefile', out_low_res_dem, output_file ] ): return
+        exe = os.path.join(self.osge4w_dir, 'bin', 'gdal_contour') if self.osge4w_dir else 'gdal_contour'
+        if not self.__execCmd( [exe, 
+            '-a', field_name, '-i', heigh_resolution, 
+            '-f', 'ESRI Shapefile', out_low_res_dem, output_file ] ): return
 
         self.iface.addVectorLayer(output_file, basename+' simplified', "ogr")
 
