@@ -95,7 +95,9 @@ class WAsP:
 
     def expor(self):
         if not self.ogr2ogr : self.configure()
-        if not self.iface.activeLayer(): QMessageBox.warning(self.iface.mainWindow(), "Warning", u'No layer selected')
+        if not self.iface.activeLayer(): 
+            QMessageBox.warning(self.iface.mainWindow(), "Warning", u'No layer selected')
+            return
        
         d = QDialog()
         d.setWindowTitle('WAsP driver options')
@@ -144,7 +146,9 @@ class WAsP:
 
     def simplify(self):
         if not self.ogr2ogr : self.configure()
-        if not self.iface.activeLayer(): QMessageBox.warning(self.iface.mainWindow(), "Warning", u'No layer selected')
+        if not self.iface.activeLayer(): 
+            QMessageBox.warning(self.iface.mainWindow(), "Warning", u'No layer selected')
+            return
 
         d = QDialog()
         d.setWindowTitle('Height countours simplification')
@@ -215,7 +219,9 @@ class WAsP:
             l.strip()
             print l
             success = False
-        if not success: QMessageBox.critical(self.iface.mainWindow(), "Erreur", ' '.join(cmd)+'\nerreur:\n voir '+err.name+' pour plus de detail ou ouvrir la Console Python et recomencer')
+        if not success: 
+            QMessageBox.critical(self.iface.mainWindow(), "Error", ' '.join(cmd)+'\nerror:\n see '+err.name+' for details ou open Python Console and retry')
+
         return success
 
 
