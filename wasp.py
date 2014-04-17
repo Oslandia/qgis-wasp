@@ -246,7 +246,10 @@ class WAsP:
         inp.close()
         inp = open(inp.name,'r')
         print ' '.join(cmd)
-        subprocess.call( cmd, stdout=out, stdin=inp, stderr=err )            
+        if self.osge4w_dir: # windows
+            subprocess.call( cmd, stdout=out, stdin=inp, stderr=err, env={'PATH': str(os.path.dirname(cmd[0]))} )            
+        else:
+            subprocess.call( cmd, stdout=out, stdin=inp, stderr=err )            
         err.close()
         err = open(err.name)
         for l in err:
