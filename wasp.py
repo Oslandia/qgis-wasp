@@ -24,6 +24,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
 import re
+import sys
 import os
 import os.path
 import tempfile
@@ -245,8 +246,10 @@ class WAsP:
         inp.write('')
         inp.close()
         inp = open(inp.name,'r')
-        print ' '.join(cmd)
+        print u' '.join(cmd)
         if self.osge4w_dir: # windows
+            for i in range(len(cmd)):
+                cmd[i] = cmd[i].encode( sys.getfilesystemencoding() )
             subprocess.call( cmd, stdout=out, stdin=inp, stderr=err, env={'PATH': str(os.path.dirname(cmd[0]))} )            
         else:
             subprocess.call( cmd, stdout=out, stdin=inp, stderr=err )            
