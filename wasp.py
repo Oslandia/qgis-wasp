@@ -144,6 +144,7 @@ class WAsP:
         if secondField.currentText() != '[second field]': fields += ','+firstField.currentText()
         if fields: cmd += ['-lco','WASP_FIELDS='+fields]
         if lineEdit.text() != '[tolerance]': cmd += ['-lco','WASP_TOLERANCE='+lineEdit.text()]
+        cmd += ['-lco','WASP_ADJ_TOLER=2', '-lco','WASP_POINT_TO_CIRCLE_RADIUS=6']
         
         cmd += [mapFile,shpFile]
         if self.__execCmd(cmd):
@@ -246,12 +247,15 @@ class WAsP:
         inp.write('')
         inp.close()
         inp = open(inp.name,'r')
-        print u' '.join(cmd)
         if self.osge4w_dir: # windows
+            cmdprt = ''
             for i in range(len(cmd)):
                 cmd[i] = cmd[i].encode( sys.getfilesystemencoding() )
+                cmdprt += cmd[i].decode( sys.getfilesystemencoding() )
+            print cmdprt
             subprocess.call( cmd, stdout=out, stdin=inp, stderr=err, env={'PATH': str(os.path.dirname(cmd[0]))} )            
         else:
+            print u' '.join(cmd)
             subprocess.call( cmd, stdout=out, stdin=inp, stderr=err )            
         err.close()
         err = open(err.name)
