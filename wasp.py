@@ -252,10 +252,10 @@ class WAsP:
             for i in range(len(cmd)):
                 cmd[i] = cmd[i].encode( sys.getfilesystemencoding() )
                 cmdprt += cmd[i].decode( sys.getfilesystemencoding() )
-            print cmdprt
+            #print cmdprt
             subprocess.call( cmd, stdout=out, stdin=inp, stderr=err, env={'PATH': str(os.path.dirname(cmd[0]))} )            
         else:
-            print u' '.join(cmd)
+            #print u' '.join(cmd)
             subprocess.call( cmd, stdout=out, stdin=inp, stderr=err )            
         err.close()
         err = open(err.name)
