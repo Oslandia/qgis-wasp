@@ -274,7 +274,7 @@ class WAsP:
         err = open(err.name)
         for l in err:
             l.strip()
-            print l
+            #print l
             success = False
         if not success: 
             QMessageBox.critical(self.iface.mainWindow(), "Error", ' '.join(cmd)+'\nerror:\n see '+err.name+' for details ou open Python Console and retry')
