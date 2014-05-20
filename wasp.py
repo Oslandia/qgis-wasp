@@ -150,7 +150,20 @@ class WAsP:
         if self.__execCmd(cmd):
             if not mapFile: return
             shpDir = os.path.join(os.path.abspath(tempfile.gettempdir()), os.path.basename(mapFile).replace('.map','.shp'))
-            cmd = [self.ogr2ogr,'-skipfailures','-overwrite','-f',"ESRI Shapefile",shpDir,mapFile]
+            cmd = [self.ogr2ogr,'-skipfailures','-f',"ESRI Shapefile",shpDir,mapFile]
+            if os.path.exists(shpDir):
+                cmd.insert(1,'-overwrite')
+
+            if self.__execCmd(cmd): 
+                self.iface.addVectorLayer(shpDir, mapFile, "ogr")
+        else:
+            if QGis.Polygon != self.iface.activeLayer().geometryType(): return
+            for c in ['-lco','WASP_MERGE=NO' ]:
+                cmd.insert(-2, c)
+            self.__execCmd(cmd)
+            if not mapFile: return
+            shpDir = os.path.join(os.path.abspath(tempfile.gettempdir()), os.path.basename(mapFile).replace('.map','.shp'))
+            cmd = [self.ogr2ogr,'-skipfailures','-f',"ESRI Shapefile",shpDir,mapFile]
             if os.path.exists(shpDir):
                 cmd.insert(1,'-overwrite')
 
