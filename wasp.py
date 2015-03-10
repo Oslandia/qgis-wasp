@@ -141,7 +141,7 @@ class WAsP:
         cmd = [self.ogr2ogr,'-skipfailures','-f','WAsP']
         fields = ''
         if firstField.currentText() != '[first field]': fields += firstField.currentText()
-        if secondField.currentText() != '[second field]': fields += ','+firstField.currentText()
+        if secondField.currentText() != '[second field]': fields += ','+secondField.currentText()
         if fields: cmd += ['-lco','WASP_FIELDS='+fields]
         if lineEdit.text() != '[tolerance]': cmd += ['-lco','WASP_TOLERANCE='+lineEdit.text()]
         cmd += ['-lco','WASP_ADJ_TOLER=2', '-lco','WASP_POINT_TO_CIRCLE_RADIUS=6']
