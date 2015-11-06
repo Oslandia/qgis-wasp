@@ -13,7 +13,7 @@ Support for WAsP .map format has been recently added to gdal. Your version of gd
 You will need to recompile geos and gdal to use this plugin (follow instructions from here http://trac.osgeo.org/geos and there http://trac.osgeo.org/gdal/wiki/BuildHints).
 
 For Windows:
-    Once you have succesfully compiled geos and gdal, put org2ogr.exe, gdalXXX.dll and geos_c.dll in the same directory.
+    Once you have successfully compiled geos and gdal, put org2ogr.exe, gdalXXX.dll and geos_c.dll in the same directory.
 
 You can clone or unzip this project directly into your .qgis2/python/plugins directory.
 
