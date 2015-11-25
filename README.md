@@ -8,16 +8,13 @@ This plugin also provides an easy way to simplify height countours when the orig
 Installation
 ------------
 
-Support for WAsP .map format has been recently added to gdal. Your version of gdal may not include it. 
+Support for WAsP .map format has been added to GDAL/OGR >= 1.11.0. Your version should normally support this by default for recent QGIS versions.
 
-You will need to recompile geos and gdal to use this plugin (follow instructions from here http://trac.osgeo.org/geos and there http://trac.osgeo.org/gdal/wiki/BuildHints).
+To install the Plugin, the best method is to use the QGIS extension manager.
 
-For Windows:
-    Once you have successfully compiled geos and gdal, put org2ogr.exe, gdalXXX.dll and geos_c.dll in the same directory.
+Alternatively, you can clone or unzip this project directly into your .qgis2/python/plugins directory.
 
-You can clone or unzip this project directly into your .qgis2/python/plugins directory.
-
-For the height contours simplification to work, you will need to have gdal installed (not necessarilly the latest version)
+For the height contours simplification to work, you will need to have gdal installed. It should be installed by default. 
 
 Configuration
 -------------
